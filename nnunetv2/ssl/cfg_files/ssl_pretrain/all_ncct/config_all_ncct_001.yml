@@ -4,7 +4,9 @@ cropping:
 
 training:
     # Data  -------------------------------------------------------------
-
+    # Apply global rotation?
+    apply_global_rot: True
+    max_angle_xyz: [90, 90, 90]
     # Default: (96, 160, 160) (nnUnet) (16, 96, 96) (DeSD)
     global_crop_size: [16, 112, 112]
     wise_crop: False

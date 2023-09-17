@@ -55,6 +55,9 @@ class Dataset3D(Dataset):
         self.wise_crop = False
         self.multichannel_input = False
         self.dataframe = pd.read_csv(self.cfg['all_datasets_csv_path'], index_col=0)
+        self.apply_global_rot = self.cfg['apply_global_rot']
+        if self.apply_global_rot:
+            self.max_angle_xyz = self.cfg['max_angle_xyz']
 
         fields = ['global_crop_size', 'local_crop_size', 'local_crops_number', 'split_path',
                   'n_iters', 'bboxes_path', 'slab_thickness', 'transformations_cfg',
@@ -268,8 +271,8 @@ class Dataset3D(Dataset):
             self.apply_sym = True
         else:
             self.apply_sym = False
+
         # read nii file
-    
         if self.apply_sym:
             image = np.load(datafiles["img"])
             image2 = image[1].transpose(2, 1, 0)
@@ -281,18 +284,22 @@ class Dataset3D(Dataset):
         else:
             image = np.load(datafiles["img"])[0]
             image = image.transpose(2, 1, 0)
+
+        if self.apply_global_rot:
+            self.max_angle_xyz = self.cfg['max_angle_xyz']
+
         # if necessary crop brain volume:
-        if not self.cfg['already_cropped']:
-            bbox = self.bboxes[name]
-            ox, oy, oz = bbox['origin_x'], bbox['origin_y'], bbox['origin_z']
-            ex, ey, ez = bbox['end_x'], bbox['end_y'], bbox['end_z']
-            image = image[oz:ez, oy:ey, ox:ex]
-            if self.apply_sym or self.multichannel_input:
-                image2 = image2[oz:ez, oy:ey, ox:ex]
+        # if not self.cfg['already_cropped']:
+        #     bbox = self.bboxes[name]
+        #     ox, oy, oz = bbox['origin_x'], bbox['origin_y'], bbox['origin_z']
+        #     ex, ey, ez = bbox['end_x'], bbox['end_y'], bbox['end_z']
+        #     image = image[oz:ez, oy:ey, ox:ex]
+        #     if self.apply_sym or self.multichannel_input:
+        #         image2 = image2[oz:ez, oy:ey, ox:ex]
         # Crop a random slab from the 3d volume
         if self.apply_sym or self.multichannel_input:
             image, image2 = self.crop_random_zslab_brain_vol(image, image2,
-                                                                wise_crop=self.cfg['wise_crop'])
+                                                             wise_crop=self.cfg['wise_crop'])
         else:
             image = self.crop_random_zslab_brain_vol(image, wise_crop=self.cfg['wise_crop'])
 
